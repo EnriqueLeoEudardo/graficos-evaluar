@@ -2,81 +2,91 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Gráfico ROI y Ahorro</title>
+  <title>Gráficos de ROI y Ahorro con Evaluar</title>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f9f9ff;
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f8;
       margin: 0;
-      padding: 20px;
-    }
-    .chart-container {
-      margin-bottom: 40px;
+      padding: 40px;
+      text-align: center;
     }
     h2 {
-      text-align: center;
       color: #1a73e8;
+    }
+    .chart-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 40px auto;
     }
   </style>
 </head>
 <body>
+  <h2>Proyección de ROI por Año con Evaluar</h2>
+  <div id="roiChart" class="chart-container"></div>
 
-  <div class="chart-container">
-    <h2>Proyección de ROI por Año con Evaluar</h2>
-    <div id="roi_chart" style="width: 100%; height: 400px;"></div>
-  </div>
+  <h2>Proyección de Ahorro Total por Año con Evaluar</h2>
+  <div id="ahorroChart" class="chart-container"></div>
 
-  <div class="chart-container">
-    <h2>Proyección de Ahorro Total por Año con Evaluar</h2>
-    <div id="ahorro_chart" style="width: 100%; height: 400px;"></div>
-  </div>
-
-  <script type="text/javascript">
+  <script>
+    // Cargar Google Charts
     google.charts.load('current', {'packages':['corechart']});
     google.charts.setOnLoadCallback(drawCharts);
 
-    function getParam(name) {
-      const params = new URLSearchParams(window.location.search);
-      return parseFloat(params.get(name)) || null;
-    }
-
     function drawCharts() {
-      const años = parseInt(new URLSearchParams(window.location.search).get("años")) || 3;
+      const params = new URLSearchParams(window.location.search);
+      const años = parseInt(params.get('años')) || 3;
 
-      const colores = ['#1a73e8', '#34a853', '#fbbc05', '#8e24aa', '#ff7043'];
-      const datosROI = [['Año', 'ROI (%)', { role: 'style' }]];
-      const datosAhorro = [['Año', 'Ahorro Total', { role: 'style' }]];
+      // Obtener valores de ROI y Ahorro
+      const roiValues = [];
+      const ahorroValues = [];
 
       for (let i = 1; i <= años; i++) {
-        const roi = getParam(`roi${i}`);
-        const ahorro = getParam(`ahorro${i}`);
-        datosROI.push([`Año ${i}`, roi, colores[i - 1]]);
-        datosAhorro.push([`Año ${i}`, ahorro, colores[i - 1]]);
+        roiValues.push(parseFloat(params.get(`roi${i}`)) || 0);
+        ahorroValues.push(parseFloat(params.get(`ahorro${i}`)) || 0);
       }
 
-      const roiData = google.visualization.arrayToDataTable(datosROI);
-      const ahorroData = google.visualization.arrayToDataTable(datosAhorro);
+      // Gráfico de ROI
+      const dataROI = new google.visualization.DataTable();
+      dataROI.addColumn('number', 'Año');
+      dataROI.addColumn('number', 'ROI (%)');
+      for (let i = 0; i < años; i++) {
+        dataROI.addRow([i + 1, roiValues[i]]);
+      }
 
       const optionsROI = {
-        vAxis: { title: "ROI (%)", minValue: 0 },
-        legend: "none",
-        animation: { duration: 1000, startup: true }
+        title: '',
+        hAxis: { title: 'Año', format: '0', gridlines: { count: años } },
+        vAxis: { title: 'ROI (%)' },
+        colors: ['#1a73e8'],
+        legend: 'none',
+        animation: { startup: true, duration: 800, easing: 'out' }
       };
+
+      const roiChart = new google.visualization.ColumnChart(document.getElementById('roiChart'));
+      roiChart.draw(dataROI, optionsROI);
+
+      // Gráfico de Ahorro
+      const dataAhorro = new google.visualization.DataTable();
+      dataAhorro.addColumn('number', 'Año');
+      dataAhorro.addColumn('number', 'Ahorro Total ($)');
+      for (let i = 0; i < años; i++) {
+        dataAhorro.addRow([i + 1, ahorroValues[i]]);
+      }
 
       const optionsAhorro = {
-        vAxis: { title: "Ahorro (USD)", minValue: 0 },
-        legend: "none",
-        animation: { duration: 1000, startup: true }
+        title: '',
+        hAxis: { title: 'Año', format: '0', gridlines: { count: años } },
+        vAxis: { title: 'Ahorro ($)' },
+        colors: ['#34a853'],
+        legend: 'none',
+        animation: { startup: true, duration: 800, easing: 'out' }
       };
 
-      const roiChart = new google.visualization.ColumnChart(document.getElementById('roi_chart'));
-      roiChart.draw(roiData, optionsROI);
-
-      const ahorroChart = new google.visualization.ColumnChart(document.getElementById('ahorro_chart'));
-      ahorroChart.draw(ahorroData, optionsAhorro);
+      const ahorroChart = new google.visualization.AreaChart(document.getElementById('ahorroChart'));
+      ahorroChart.draw(dataAhorro, optionsAhorro);
     }
   </script>
-
 </body>
 </html>
